@@ -289,7 +289,8 @@ class RenderTrajectory:
             test_mode="test" if self.traj in ["spiral", "interpolate"] else "inference",
         )
 
-        install_checks.check_ffmpeg_installed()
+        if not install_checks.check_ffmpeg_installed():
+            sys.exit(1)
 
         seconds = self.seconds
         crop_data = None

@@ -116,7 +116,6 @@ class ProcessImages:
                 sys.exit(1)
             require_cameras_exist = True
 
-        install_checks.check_ffmpeg_installed()
         install_checks.check_colmap_installed()
 
         image_rename_map: Optional[Dict[str, str]] = None
@@ -145,9 +144,12 @@ class ProcessImages:
             summary_log.append(f"Starting with {num_frames} images")
 
             # Downscale images
-            summary_log.append(
-                process_data_utils.downscale_images(image_dir, self.num_downscales, verbose=self.verbose)
-            )
+            if install_checks.check_ffmpeg_installed():
+                summary_log.append(
+                    process_data_utils.downscale_images(image_dir, self.num_downscales, verbose=self.verbose)
+                )
+            else:
+                process_data_utils.downscale_images_PIL(image_dir, self.num_downscales)
         else:
             num_frames = len(process_data_utils.list_images(self.data))
             if num_frames == 0:
@@ -311,7 +313,8 @@ class ProcessVideo:
 
     def main(self) -> None:  # pylint: disable=R0915
         """Process video into a nerfstudio dataset."""
-        install_checks.check_ffmpeg_installed()
+        if not install_checks.check_ffmpeg_installed():
+            sys.exit(1)
         install_checks.check_colmap_installed()
 
         self.output_dir.mkdir(parents=True, exist_ok=True)

@@ -22,13 +22,14 @@ from rich.console import Console
 CONSOLE = Console(width=120)
 
 
-def check_ffmpeg_installed():
+def check_ffmpeg_installed() -> bool:
     """Checks if ffmpeg is installed."""
     ffmpeg_path = shutil.which("ffmpeg")
     if ffmpeg_path is None:
         CONSOLE.print("[bold red]Could not find ffmpeg. Please install ffmpeg.")
         print("See https://ffmpeg.org/download.html for installation instructions.")
-        sys.exit(1)
+        return False
+    return True
 
 
 def check_colmap_installed():

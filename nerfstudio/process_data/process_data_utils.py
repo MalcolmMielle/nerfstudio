@@ -13,7 +13,6 @@
 # limitations under the License.
 
 """Helper utils for processing data into the nerfstudio format."""
-
 import os
 import shutil
 import sys
@@ -22,7 +21,9 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 import cv2
+import imageio
 import numpy as np
+from PIL import Image
 from rich.console import Console
 from typing_extensions import Literal, OrderedDict
 
@@ -362,6 +363,37 @@ def downscale_images(
     downscale_text = [f"[bold blue]{2**(i+1)}x[/bold blue]" for i in range(num_downscales)]
     downscale_text = ", ".join(downscale_text[:-1]) + " and " + downscale_text[-1]
     return f"We downsampled the images by {downscale_text}"
+
+
+def downscale_images_PIL(image_dir: Path, num_downscales: int, folder_name: str = "images"):
+    """Downscales the images in the directory. Uses imageio.
+
+    Args:
+        image_dir: Path to the directory containing the images.
+        num_downscales: Number of times to downscale the images. Downscales by 2 each time.
+        folder_name: Name of the output folder
+    """
+
+    if num_downscales == 0:
+        raise ValueError("`downscale_factor` should be a positive integer")
+
+    # list of image files in the folder
+    img_idx = 0
+    for image_path in image_dir.iterdir():
+        img_idx += 1
+        img = Image.open(image_path).convert("RGB")
+        img = img.resize(
+            (
+                int(img.size[0] / num_downscales),
+                int(img.size[1] / num_downscales),
+            ),
+            Image.LANCZOS,
+        )
+        img_array = np.array(img).astype(np.uint8)
+        imageio.imwrite(
+            (Path(folder_name) / f"frame_{img_idx:05d}.jpeg"),
+            img_array,
+        )
 
 
 def find_tool_feature_matcher_combination(
